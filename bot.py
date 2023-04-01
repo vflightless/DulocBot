@@ -1,24 +1,48 @@
 import disnake
 import os
-import glob
 from dotenv import load_dotenv
+
+#       API
 load_dotenv()
+discordKey = os.getenv('KEY')
 
-KEY = os.getenv('KEY')
+#       Image List
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(os.path.join(script_dir, 'images'))
 
-path = "./images/"  # change this to the path of your directory
-file_extension = "*.png"    # change this to the file extension you want to load
-files = glob.glob(os.path.join(path, file_extension))
-print(files)
+images = os.listdir()
+imgList = []
 
-class MyClient(disnake.Client):
-    async def on_ready(self):
-        print(f'Logged on as {self.user}!')
-
-    async def on_message(self, message):
-        print(f'Message from {message.author}: {message.content}')
-
+for image in images:
+    imgName = image.split('.')[0]
+    imgList.append([imgName, image])
+# print(imgList)
 
 
-client = MyClient()
-client.run(KEY)
+#       Discord Section
+intents = disnake.Intents.default()
+intents.members = True
+intents.message_content = True
+
+client = disnake.Client(intents=intents)
+
+@client.event
+async def on_ready():
+    print(f'We have logged in as {client.user}')
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+
+    for img in imgList:
+        imageName = img[0]
+        imageFile = img[1]
+        print('Message parse: ' + imageName + ', ' + imageFile)
+        
+        if message.content.find(imageName) != -1:
+            await message.channel.send(file=disnake.File(imageFile))
+
+
+
+client.run(discordKey)
