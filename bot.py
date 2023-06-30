@@ -1,5 +1,6 @@
 import disnake
 import os
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 #       API
@@ -12,10 +13,11 @@ os.chdir(os.path.join(script_dir, 'images'))
 
 images = os.listdir()
 imgList = []
+lastSent = timedelta(minutes=1)
 
 for image in images:
     imgName = image.split('.')[0]
-    imgList.append([imgName, image])
+    imgList.append([imgName, image, datetime.now()])
 # print(imgList)
 
 
@@ -38,11 +40,12 @@ async def on_message(message):
     for img in imgList:
         imageName = img[0]
         imageFile = img[1]
-        print('Message parse: ' + imageName + ', ' + imageFile)
+        imageLast = img[2]
+        print('Message parse: ' + imageName + ', ' + imageFile + ', ' + str(imageLast))
+
         
-        if message.content.find(imageName) != -1:
+        if message.content.find(imageName) != -1 and (datetime.now() - imageLast) >= lastSent:
+            img[2] = datetime.now()
             await message.channel.send(file=disnake.File(imageFile))
-
-
 
 client.run(discordKey)
